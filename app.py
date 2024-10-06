@@ -4,47 +4,79 @@ import numpy as np
 import pickle
 import json
 
-# Load the pre-trained model
-with open('banglore_home_prices_model.pickle', 'rb') as file:
-    model = pickle.load(file)
+# Set up the Streamlit app layout
+st.set_page_config(page_title="Bangalore Home Price Prediction", layout="wide")
 
-# Load the columns.json file to get feature information
-with open("columns.json", "r") as f:
-    data_columns = json.load(f)['data_columns']
-    location_columns = data_columns[3:]  # Location columns start after the first 3 features
+# Title and Description
+st.title("🏠 Bangalore Home Price Prediction")
+st.markdown("""
+This application predicts the home prices in Bangalore based on various factors such as:
+- **Location**
+- **Total Square Feet**
+- **Number of Bathrooms**
+- **BHK (Number of Bedrooms)**
 
-# Streamlit App Title
-st.title("Bangalore Home Price Prediction")
-st.write("This app predicts the home prices in Bangalore based on various factors like location, square footage, and more.")
+Provide the house details on the left sidebar and click **Predict** to view the estimated price.
+""")
 
 # Sidebar for user inputs
-st.sidebar.header("Provide the House Details:")
-location = st.sidebar.selectbox("Select Location", location_columns)
-total_sqft = st.sidebar.number_input("Total Square Feet", min_value=300, max_value=10000, step=10)
-bathrooms = st.sidebar.number_input("Number of Bathrooms", min_value=1, max_value=10, step=1)
-bhk = st.sidebar.number_input("BHK (Number of Bedrooms)", min_value=1, max_value=10, step=1)
+st.sidebar.header("🏘️ House Details")
+st.sidebar.write("Enter the details below to predict the home price:")
 
-# Prediction button
-if st.sidebar.button("Predict"):
+# Load the pre-trained model
+@st.cache_resource
+def load_model():
+    with open('banglore_home_prices_model.pickle', 'rb') as file:
+        return pickle.load(file)
+
+# Load column data
+@st.cache_resource
+def load_columns():
+    with open("columns.json", "r") as f:
+        return json.load(f)['data_columns']
+
+# Load model and columns
+model = load_model()
+data_columns = load_columns()
+location_columns = data_columns[3:]  # Location columns start after the first 3 features
+
+# Create input fields for user to fill in
+location = st.sidebar.selectbox("📍 Select Location", sorted(location_columns))
+total_sqft = st.sidebar.slider("🏠 Total Square Feet", min_value=300, max_value=10000, step=50, value=1000)
+bathrooms = st.sidebar.number_input("🚽 Number of Bathrooms", min_value=1, max_value=10, step=1, value=2)
+bhk = st.sidebar.number_input("🛏️ BHK (Number of Bedrooms)", min_value=1, max_value=10, step=1, value=2)
+
+# Helper function to generate input array for the model
+def create_input_array(location, sqft, bath, bhk):
+    x = np.zeros(len(data_columns))
+    x[0] = sqft
+    x[1] = bath
+    x[2] = bhk
+
+    if location in location_columns:
+        loc_index = data_columns.index(location.lower())
+        x[loc_index] = 1
+    return x
+
+# Prediction and display result
+if st.sidebar.button("🔍 Predict Price"):
     try:
-        # Create an empty array of zeros with the length of the feature columns
-        x = np.zeros(len(data_columns))
-        x[0] = total_sqft
-        x[1] = bathrooms
-        x[2] = bhk
+        # Generate input vector for prediction
+        input_vector = create_input_array(location, total_sqft, bathrooms, bhk)
 
-        # Set the location index in the input vector to 1 if the location exists
-        if location in location_columns:
-            loc_index = data_columns.index(location.lower())
-            x[loc_index] = 1
+        # Predict using the model
+        predicted_price = model.predict([input_vector])[0]
 
-        # Make prediction using the model
-        predicted_price = model.predict([x])[0]
-        
-        # Display the prediction result
-        st.subheader(f"Predicted Price of the House: ₹{predicted_price:.2f} lakhs")
+        # Display the result with formatting
+        st.success(f"💰 The estimated price for the house is: **₹ {predicted_price:.2f} lakhs**")
     except Exception as e:
-        st.error(f"Error: {e}")
+        st.error(f"Error in prediction: {e}")
 
-# Adding instructions at the bottom
-st.write("Fill in the details in the sidebar and click **Predict** to see the house price.")
+# Additional Information
+st.sidebar.markdown("---")
+st.sidebar.subheader("ℹ️ Additional Info")
+st.sidebar.write("""
+- Model used: **LinearRegression**
+- Prediction Unit: **Price in Lakhs**
+- Dataset: **Bangalore Home Prices**
+""")
