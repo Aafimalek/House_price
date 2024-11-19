@@ -8,3 +8,4 @@ The web app was built in Python using the following libraries:<br>
 - scikit-learn
 - pickle
 Last updated: Mon Nov 18 02:25:53 UTC 2024
+Last updated: Tue Nov 19 02:23:25 UTC 2024
