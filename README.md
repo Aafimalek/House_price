@@ -7,7 +7,5 @@ The web app was built in Python using the following libraries:<br>
 - numpy
 - scikit-learn
 - pickle
-Last updated: Mon Nov 18 02:25:53 UTC 2024
-Last updated: Tue Nov 19 02:23:25 UTC 2024
-Last updated: Wed Nov 20 02:22:42 UTC 2024
-Last updated: Thu Nov 21 02:22:37 UTC 2024
+### if the website is down please click on yes get this app back up 
+![{A0AAF339-A567-4182-AE30-6B64A49AFEB4}](https://github.com/user-attachments/assets/0a2d79a4-ad85-41c8-a666-6870ae408fc0)
